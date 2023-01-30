@@ -1,0 +1,11 @@
+msgid ""
+msgstr ""
+
+msgid "plugins.generic.controlvocabulary.Name"
+msgstr "ControlVocabulary"
+
+msgid "plugins.generic.controlvocabulary.displayName"
+msgstr "Vocabulário controlado"
+
+msgid "plugins.generic.controlvocabulary.description"
+msgstr "Permitir uso de um vocabulário controlado."
