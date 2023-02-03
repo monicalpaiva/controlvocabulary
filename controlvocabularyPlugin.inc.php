@@ -10,17 +10,34 @@
  * @class controlvocabularyPlugin
  * @ingroup plugins_generic_controlvocabulary
  * @brief controlvocabulary plugin class
- *
- *
+ * 
  */
+namespace APP\plugins\generic\controlvocabulary;
+
+use APP\core\Application;
+use PKP\plugins\HookRegistry;
+use PKP\plugins\GenericPlugin;
+use PKP\submission\PKPSubmission;
 
 import('lib.pkp.classes.plugins.GenericPlugin');
 
 class controlvocabularyPlugin extends GenericPlugin {
+	public function register($category, $path, $mainContextId = NULL) {
 
-    function getName(){
-        return __('plugins.generic.controlvocabulary.Name')
-    }
+		// Register the plugin even when it is not enabled
+		$success = parent::register($category, $path);
+
+		if ($success && $this->getEnabled()) {
+			// Do something when the plugin is enabled
+		}
+
+		return $success;
+	}
+
+	/**
+	 * Name for this plugin
+	 * Description for this plugin
+	 */
 
     function getDisplayName(){
         return __('plugins.generic.controlvocabulary.displayName');
@@ -29,42 +46,6 @@ class controlvocabularyPlugin extends GenericPlugin {
     function getDescription(){
         return __('plugins.generic.controlvocabulary.description');
     }
-
-    /**
-	 * Add custom js for backend and frontend
-	 */
-	function hideNativeAutosuggest($hookName, $params) {
-		$template =& $params[1];
-		if ($template !== 'workflow/workflow.tpl') {
-			return false;
-		}
-
-		$templateMgr =& $params[0];
-		$templateMgr->addStylesheet(
-			"ObjectsForReviewGridHandlerStyles",
-			"div[id^='metadata-keywords-autosuggest'] .autosuggest__results-container{ position: absolute; left: -9999px; }",
-			[
-				"inline" => true,
-				"contexts" => "backend",
-			]
-		);
-
-		return false;
-	}
-
-    /**
-	 * Add YSO autoSuggest scripts for keywords
-	 * @param $hookName string
-	 * @param $params array
-	 */
-	function addCustomAutosuggest($hookName, $params) {
-		$output =& $params[2];
-		$output .= $this->ysoAutosuggest('en_US','en');
-		$output .= $this->ysoAutosuggest('pt_BR','pt');
-		return false;
-	}
-
-
 
     function register($category, $path, $mainContextId = NULL) {
 		$success = parent::register($category, $path);
@@ -75,53 +56,64 @@ class controlvocabularyPlugin extends GenericPlugin {
 		return $success;
 	}
 
-    /**
-	 * Get YSO autosuggest api script for selected locale
-	 * @param $localeField string
-	 * @param $localeApi string
-	 * @return $string
+	/**
+	 * Ação para o plugin
 	 */
-	function ysoAutosuggest($localeField, $localeApi){
-		return "
-			<script>
-				$( function() {
-					$( '#metadata-keywords-control-" . $localeField . "' ).autocomplete({
-						source: function( request, response ) {
-							$.ajax( {
-								url: 'https://api.finto.fi/rest/v1/search?vocab=yso&lang=" . $localeApi . "',
-								dataType: 'json',
-								data: {
-									query: request.term + '*'
-								},
-								success:
-									function( data ) {
-										var output = data.results;
-										response($.map(data.results, function(item) {
-										return {
-											label: item.prefLabel + ' [' + item.uri + ']',
-											value: item.prefLabel + ' [' + item.uri + ']'
-									}
-								}));
-							}
-						} );
-						},
-						minLength: 2,
-						autoFocus: true,
-						select: function(){
-							$( '#metadata-keywords-control-" . $localeField . "' ).focus().trigger({type: 'keypress', which: 50, keyCode: 50});
-						}
-					} );
-				} );
-			</script>";
-	}
+	public function getActions($request, $actionArgs) {
 
+		// Get the existing actions
+			$actions = parent::getActions($request, $actionArgs);
+			if (!$this->getEnabled()) {
+				return $actions;
+			}
+	
+		// Create a LinkAction that will call the plugin's
+		// `manage` method with the `settings` verb.
+			$router = $request->getRouter();
+			import('lib.pkp.classes.linkAction.request.AjaxModal');
+			$linkAction = new LinkAction(
+				'settings',
+				new AjaxModal(
+					$router->url(
+						$request,
+						null,
+						null,
+						'manage',
+						null,
+						array(
+							'verb' => 'settings',
+							'plugin' => $this->getName(),
+							'category' => 'generic'
+						)
+					),
+					$this->getDisplayName()
+				),
+				__('manager.plugins.settings'),
+				null
+			);
+	
+		// Add the LinkAction to the existing actions.
+		// Make it the first action to be consistent with
+		// other plugins.
+			array_unshift($actions, $linkAction);
+	
+			return $actions;
+		}
 
+		public function manage($args, $request) {
+			switch ($request->getUserVar('verb')) {
+	
+			// Return a JSON response containing the
+			// settings form
+			case 'settings':
+			$templateMgr = TemplateManager::getManager($request);
+			$settingsForm = $templateMgr->fetch($this->getTemplateResource('settings.tpl'));
+			return new JSONMessage(true, $settingsForm);
+			}
+			return parent::manage($args, $request);
+		}
 
-
-
-
-
-
+		
+		
 }
-
 ?>
