@@ -22,18 +22,6 @@ use PKP\submission\PKPSubmission;
 import('lib.pkp.classes.plugins.GenericPlugin');
 
 class controlvocabularyPlugin extends GenericPlugin {
-	public function register($category, $path, $mainContextId = NULL) {
-
-		// Register the plugin even when it is not enabled
-		$success = parent::register($category, $path);
-
-		if ($success && $this->getEnabled()) {
-			// Do something when the plugin is enabled
-		}
-
-		return $success;
-	}
-
 	/**
 	 * Name for this plugin
 	 * Description for this plugin
