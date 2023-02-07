@@ -12,12 +12,6 @@
  * @brief controlvocabulary plugin class
  * 
  */
-namespace APP\plugins\generic\controlvocabulary;
-
-use APP\core\Application;
-use PKP\plugins\HookRegistry;
-use PKP\plugins\GenericPlugin;
-use PKP\submission\PKPSubmission;
 
 import('lib.pkp.classes.plugins.GenericPlugin');
 
