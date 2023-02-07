@@ -12,6 +12,12 @@
  * @brief controlvocabulary plugin class
  * 
  */
+namespace APP\plugins\generic\controlvocabulary;
+
+use APP\core\Application;
+use PKP\plugins\HookRegistry;
+use PKP\plugins\GenericPlugin;
+use PKP\submission\PKPSubmission;
 
 import('lib.pkp.classes.plugins.GenericPlugin');
 
@@ -84,15 +90,27 @@ class controlvocabularyPlugin extends GenericPlugin {
 
 		public function manage($args, $request) {
 			switch ($request->getUserVar('verb')) {
-	
-			// Return a JSON response containing the
-			// settings form
-			case 'settings':
-			$templateMgr = TemplateManager::getManager($request);
-			$settingsForm = $templateMgr->fetch($this->getTemplateResource('settings.tpl'));
-			return new JSONMessage(true, $settingsForm);
-			}
-			return parent::manage($args, $request);
+				case 'settings':
+		  
+				  // Load the custom form
+				  $this->import('VocabularyRequiredSettingsForm');
+				  $form = new VocabularyRequiredSettingsForm($this);
+		  
+				  // Fetch the form the first time it loads, before
+				  // the user has tried to save it
+				  if (!$request->getUserVar('save')) {
+					$form->initData();
+							return new JSONMessage(true, $form->fetch($request));
+				  }
+		  
+				  // Validate and execute the form
+				  $form->readInputData();
+				  if ($form->validate()) {
+					$form->execute();
+					return new JSONMessage(true);
+				  }
+				  }
+				  return parent::manage($args, $request);
 		}
 
 		

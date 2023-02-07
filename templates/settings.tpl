@@ -1,19 +1,27 @@
-{**
- * plugins/generic/webFeed/templates/settingsForm.tpl
- *
- * Copyright (c) 2014-2021 Simon Fraser University
- * Copyright (c) 2003-2021 John Willinsky
- * Distributed under the GNU GPL v3. For full terms see the file docs/COPYING.
- *
- * Web feeds plugin settings
- *
- *}
-<form>
-  <label for="LinkPrincipal">Link Principal</label>
-  <input type="text" name="Link Principal" value="LinkPrincipal">
-  <br>
-  <label for="LinkSecundario">Link Secundário</label>
-  <input type="text" name="Link Secundário" value="LinkSecundario">
-  <br>
-  <button type="submit">Save</button>
+<script>
+	$(function() {ldelim}
+		$('#VocabularyRequiredSettings').pkpHandler('$.pkp.controllers.form.AjaxFormHandler');
+	{rdelim});
+</script>
+
+<form
+  class="pkp_form"
+  id="VocabularyRequiredSettings"
+  method="POST"
+  action="{url router=$smarty.const.ROUTE_COMPONENT op="manage" category="generic" plugin=$pluginName verb="settings" save=true}"
+>
+  <!-- Always add the csrf token to secure your form -->
+	{csrf}
+
+  {fbvFormArea}
+		{fbvFormSection}
+			{fbvElement
+        type="text"
+        id="LinkPrincipal"
+        value=$LinkPrincipal
+        label="plugins.generic.VocabularyRequired.LinkPrincipal"
+      }
+		{/fbvFormSection}
+  {/fbvFormArea}
+	{fbvFormButtons submitText="common.save"}
 </form>
