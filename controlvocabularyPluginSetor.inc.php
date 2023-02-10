@@ -12,16 +12,10 @@
  * @brief controlvocabulary plugin class
  * 
  */
-namespace APP\plugins\generic\controlvocabulary;
 
-use APP\core\Application;
-use PKP\plugins\HookRegistry;
-use PKP\plugins\GenericPlugin;
-use PKP\submission\PKPSubmission;
+ import('lib.pkp.classes.plugins.GenericPlugin');
 
-import('lib.pkp.classes.plugins.GenericPlugin');
-
-class controlvocabularyPlugin extends GenericPlugin {
+ class controlvocabularyPlugin extends GenericPlugin {
 	/**
 	 * Name for this plugin
 	 * Description for this plugin
@@ -113,6 +107,82 @@ class controlvocabularyPlugin extends GenericPlugin {
 				  return parent::manage($args, $request);
 		}
 
+		/**
+	 * Add custom js for backend and frontend
+	 */
+	function hideNativeAutosuggest($hookName, $params) {
+		$template =& $params[1];
+		if ($template !== 'workflow/workflow.tpl') {
+			return false;
+		}
+
+		$templateMgr =& $params[0];
+		$templateMgr->addStylesheet(
+			"ObjectsForReviewGridHandlerStyles",
+			"div[id^='metadata-keywords-autosuggest'] .autosuggest__results-container{ position: absolute; left: -9999px; }",
+			[
+				"inline" => true,
+				"contexts" => "backend",
+			]
+		);
+
+		return false;
+	}
+
+	/**
+	 * Add YSO autoSuggest scripts for keywords
+	 * @param $hookName string
+	 * @param $params array
+	 */
+	function addCustomAutosuggest($hookName, $params) {
+		$output =& $params[2];
+		$output .= $this->cvAutosuggest('en_US','en');
+		$output .= $this->cvAutosuggest('pt_br','pt');
+		return false;
+	}
+
+
+	/**
+	 * Get YSO autosuggest api script for selected locale
+	 * @param $localeField string
+	 * @param $localeApi string
+	 * @return $string
+	 */
+	function cvAutosuggest($localeField, $localeApi){
+		return "
+			<script>
+				$( function() {
+					$( '#metadata-keywords-control-" . $localeField . "' ).autocomplete({
+						source: function( request, response ) {
+							$.ajax( {
+								url: 'https://api.finto.fi/rest/v1/search?vocab=yso&lang=" . $localeApi . "',
+								dataType: 'json',
+								data: {
+									query: request.term + '*'
+								},
+								success:
+									function( data ) {
+										var output = data.results;
+										response($.map(data.results, function(item) {
+										return {
+											label: item.prefLabel + ' [' + item.uri + ']',
+											value: item.prefLabel + ' [' + item.uri + ']'
+									}
+								}));
+							}
+						} );
+						},
+						minLength: 2,
+						autoFocus: true,
+						select: function(){
+							$( '#metadata-keywords-control-" . $localeField . "' ).focus().trigger({type: 'keypress', which: 50, keyCode: 50});
+						}
+					} );
+				} );
+			</script>";
+	}
+
+}
 		
 		
 }
