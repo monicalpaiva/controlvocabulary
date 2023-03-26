@@ -12,12 +12,6 @@
  * @brief controlvocabulary plugin class
  * 
  */
-namespace APP\plugins\generic\controlvocabulary;
-
-use APP\core\Application;
-use PKP\plugins\HookRegistry;
-use PKP\plugins\GenericPlugin;
-use PKP\submission\PKPSubmission;
 
 import('lib.pkp.classes.plugins.GenericPlugin');
 
@@ -90,30 +84,75 @@ class controlvocabularyPlugin extends GenericPlugin {
 
 		public function manage($args, $request) {
 			switch ($request->getUserVar('verb')) {
-				case 'settings':
-		  
-				  // Load the custom form
-				  $this->import('VocabularyRequiredSettingsForm');
-				  $form = new VocabularyRequiredSettingsForm($this);
-		  
-				  // Fetch the form the first time it loads, before
-				  // the user has tried to save it
-				  if (!$request->getUserVar('save')) {
-					$form->initData();
-							return new JSONMessage(true, $form->fetch($request));
-				  }
-		  
-				  // Validate and execute the form
-				  $form->readInputData();
-				  if ($form->validate()) {
-					$form->execute();
-					return new JSONMessage(true);
-				  }
-				  }
-				  return parent::manage($args, $request);
+	
+			// Return a JSON response containing the
+			// settings form
+			case 'settings':
+			$templateMgr = TemplateManager::getManager($request);
+			$settingsForm = $templateMgr->fetch($this->getTemplateResource('settings.tpl'));
+			return new JSONMessage(true, $settingsForm);
+			}
+			return parent::manage($args, $request);
 		}
 
-		
-		
+		function hideNativeAutosuggest($hookName, $params) {
+			$template =& $params[1];
+			if ($template !== 'workflow/workflow.tpl') {
+				return false;
+			}
+	
+			$templateMgr =& $params[0];
+			$templateMgr->addStylesheet(
+				"ObjectsForReviewGridHandlerStyles",
+				"div[id^='metadata-keywords-autosuggest'] .autosuggest__results-container{ position: absolute; left: -9999px; }",
+				[
+					"inline" => true,
+					"contexts" => "backend",
+				]
+			);
+	
+			return false;
+		}
+
+		function addCustomAutosuggest($hookName, $params) {
+			$output =& $params[2];
+			$output .= $this->ysoAutosuggest('pt_BR','pt');
+			$output .= $this->ysoAutosuggest('en_US','en');
+			return false;
+		}
+
+		function ysoAutosuggest($localeField, $localeApi){
+			return "
+				<script>
+					$( function() {
+						$( '#metadata-keywords-control-" . $localeField . "' ).autocomplete({
+							source: function( request, response ) {
+								$.ajax( {
+									url: '$controlVocabularyAPI" . $localeApi . "',
+									dataType: 'json',
+									data: {
+										query: request.term + '*'
+									},
+									success:
+										function( data ) {
+											var output = data.results;
+											response($.map(data.results, function(item) {
+											return {
+												label: item.prefLabel + ' [' + item.uri + ']',
+												value: item.prefLabel + ' [' + item.uri + ']'
+										}
+									}));
+								}
+							} );
+							},
+							minLength: 2,
+							autoFocus: true,
+							select: function(){
+								$( '#metadata-keywords-control-" . $localeField . "' ).focus().trigger({type: 'keypress', which: 50, keyCode: 50});
+							}
+						} );
+					} );
+				</script>";
+		}
 }
 ?>

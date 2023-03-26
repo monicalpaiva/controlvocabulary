@@ -9,3 +9,12 @@ msgstr "Vocabulário controlado"
 
 msgid "plugins.generic.controlvocabulary.description"
 msgstr "Permitir uso de um vocabulário controlado."
+
+msgid "plugins.generic.controlvocabulary.LinkPrincipal"
+msgstr "Link API"
+
+msgid "plugins.generic.controlvocabulary.Descrição"
+msgstr "Link"
+
+msgid "plugins.generic.controlvocabulary.manager.settings.description"
+msgstr "Inserir o API do Vocabulario Controlado"
