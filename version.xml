@@ -14,7 +14,7 @@
 	<application>controlvocabulary</application>
 	<type>plugins.generic</type>
 	<release>1.0.0.0</release>
-	<date>2023-01-30</date>
+	<date>2023-06-05</date>
 	<lazy-load>1</lazy-load>
 	<class>controlvocabularyPlugin</class>
 </version>
